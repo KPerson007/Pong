@@ -14,6 +14,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private final int ELEMENT_WIDTH = 25;
     private final int MOVE_OFFSET = 10;
     private final int FRAME_DELAY = 50;
+    private final int ABS_DEFAULT_DELTA_Y_FULL = 6;
 
     private Thread runThread;
     private int leftBoxY = 0;
@@ -32,7 +33,36 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         leftBoxY = (this.getSize().height / 2) - (BOX_HEIGHT / 2);
         rightBoxY = leftBoxY;
         ball = new Point((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2) - 100);
-        deltaBall = new Point(-6, 6);
+        deltaBall = new Point(-12, 6);
+    }
+
+    /**
+     * determine the Y position of the ball relative to the paddle it collided with
+     * @param boxY send in leftBoxY or rightBoxY depending on the collision
+     * @return a new delta Y for the ball
+     */
+    public int getNewDeltaY (int boxY)
+    {
+        if (ball.y < boxY + (BOX_HEIGHT / 2)) //is in top half
+        {
+            if(DEBUG)
+                System.out.println("TOP HALF");
+            if (ball.y < boxY + (BOX_HEIGHT / 3)) //is in top third
+                return -ABS_DEFAULT_DELTA_Y_FULL;
+            else //is in top half of middle third
+                return -(ABS_DEFAULT_DELTA_Y_FULL / 2);
+        }
+        else if (ball.y > boxY + (BOX_HEIGHT / 2)) //is in bottom half
+        {
+            if(DEBUG)
+                System.out.println("BOTTOM HALF");
+            if (ball.y > boxY + (BOX_HEIGHT - (BOX_HEIGHT / 3))) //is in bottom third
+                return ABS_DEFAULT_DELTA_Y_FULL;
+            else //is in bottom half of middle third
+                return ABS_DEFAULT_DELTA_Y_FULL / 2;
+        }
+        else //is in exact middle
+            return 0;
     }
 
     public void update(Graphics g)
@@ -135,12 +165,14 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 if (DEBUG)
                     System.out.println("Ball Collide With Left Box");
                 deltaBall.x = -deltaBall.x;
+                deltaBall.y = getNewDeltaY(leftBoxY);
             }
             else if (ball.x + ELEMENT_WIDTH >= d.width - ELEMENT_WIDTH && ball.y >= rightBoxY && ball.y <= rightBoxY + BOX_HEIGHT) //check collision with right box
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Right Box");
                 deltaBall.x = -deltaBall.x;
+                deltaBall.y = getNewDeltaY(rightBoxY);
             }
             else if (ball.y <= 0 || ball.y + ELEMENT_WIDTH >= d.height) //check colisions with top and bottom
             {
@@ -148,9 +180,6 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                     System.out.println("Ball Collide With Top Or Bottom");
                 deltaBall.y = -deltaBall.y;
             }
-
-
-
 
             repaint();
             try
