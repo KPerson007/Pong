@@ -17,11 +17,13 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private Thread runThread;
     private int leftBoxY = 0;
     private int rightBoxY = 0;
+    private Point ball;
     private Set<Integer> keysPressed = new HashSet<Integer>();
-
     private boolean twoPlayer = true;
     private int p1Score = 0;
     private int p2score = 0;
+    private int ballXOffset = -2;
+    private int ballYOffset = 1;
 
     public void update(Graphics g)
     {
@@ -49,6 +51,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             this.addKeyListener(this);
             leftBoxY = (this.getSize().height / 2) - (BOX_HEIGHT / 2);
             rightBoxY = leftBoxY;
+            ball = new Point((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2) - 100);
             runThread = new Thread(this);
             runThread.start();
         }
@@ -56,9 +59,16 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         g.fillRect(0, leftBoxY, ELEMENT_WIDTH, BOX_HEIGHT); //draw left paddle
         g.fillRect(d.width - ELEMENT_WIDTH, rightBoxY, ELEMENT_WIDTH, BOX_HEIGHT); //draw right paddle
         g.drawLine(d.width / 2, 0, d.width / 2, d.height); //draw dividing line
-        g.fillOval((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2), ELEMENT_WIDTH, ELEMENT_WIDTH); //draw pong ball
-        g.drawString("" + p1Score, d.width / 4, 10); //player 1 score
-        g.drawString("" + p2score, (d.width /2) + (d.width / 4), 10); //player 2 score
+        g.fillOval(ball.x, ball.y, ELEMENT_WIDTH, ELEMENT_WIDTH); //draw pong ball
+        int p1TextX = d.width / 4;
+        int p2TextX = (d.width /2) + (d.width / 4);
+        g.drawString("" + p1Score, p1TextX, 10); //player 1 score
+        g.drawString("" + p2score, p2TextX, 10); //player 2 score
+        String p1KeyPrompt = "W = Up; S = Down";
+        String p2KeyPrompt = "Up Arrow = Up; Down Arrow = Down";
+        g.drawString(p1KeyPrompt, p1TextX - (g.getFontMetrics().stringWidth(p1KeyPrompt) / 2), 25); //player 1 key prompt
+        if (twoPlayer)
+            g.drawString(p2KeyPrompt, p2TextX - (g.getFontMetrics().stringWidth(p2KeyPrompt) / 2), 25); //player 2 key prompt, only draw if 2 player game
     }
 
     @Override
@@ -68,7 +78,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         {
             if (DEBUG)
                 System.out.println("Loop");
-            for (int k : keysPressed)
+            for (int k : keysPressed) //move paddles if keys are pressed
             {
                 if (DEBUG)
                     System.out.println(k);
@@ -83,20 +93,33 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                             leftBoxY += MOVE_OFFSET;
                         break;
                     case KeyEvent.VK_UP:
-                        if (!(rightBoxY - MOVE_OFFSET <= 0))
+                        if (!(rightBoxY - MOVE_OFFSET <= 0) && twoPlayer)
                             rightBoxY -= MOVE_OFFSET;
                         break;
                     case KeyEvent.VK_DOWN:
-                        if (!(rightBoxY + BOX_HEIGHT + MOVE_OFFSET >= this.getSize().height))
+                        if (!(rightBoxY + BOX_HEIGHT + MOVE_OFFSET >= this.getSize().height) && twoPlayer)
                             rightBoxY += MOVE_OFFSET;
                         break;
                 }
             }
+
+            //move ball
+            ball.x += ballXOffset;
+            ball.y += ballYOffset;
+            //check collisions
+
+            if (ball.x <= ELEMENT_WIDTH && ball.y >= leftBoxY && ball.y <= leftBoxY + BOX_HEIGHT) //check collision w/ left box
+            {
+                if (DEBUG)
+                    System.out.println("Ball Collide With Left Box");
+                ballXOffset = -ballXOffset;
+            }
+
             repaint();
             try
             {
                 Thread.currentThread();
-                Thread.sleep(100);
+                Thread.sleep(50);
             }
             catch(Exception e)
             {
