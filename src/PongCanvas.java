@@ -8,22 +8,32 @@ import java.util.*;
  * Created by Kevin on 8/9/2016.
  */
 public class PongCanvas extends Canvas implements Runnable, KeyListener {
-    private final boolean DEBUG = false;
+    private final boolean DEBUG = true;
 
     private final int BOX_HEIGHT = 100;
     private final int ELEMENT_WIDTH = 25;
     private final int MOVE_OFFSET = 10;
+    private final int FRAME_DELAY = 50;
 
     private Thread runThread;
     private int leftBoxY = 0;
     private int rightBoxY = 0;
     private Point ball;
+    private Point deltaBall;
     private Set<Integer> keysPressed = new HashSet<Integer>();
     private boolean twoPlayer = true;
+    private boolean moveBall = true;
     private int p1Score = 0;
     private int p2score = 0;
-    private int ballXOffset = -2;
-    private int ballYOffset = 1;
+
+    public void resetGame()
+    {
+        Dimension d = this.getSize();
+        leftBoxY = (this.getSize().height / 2) - (BOX_HEIGHT / 2);
+        rightBoxY = leftBoxY;
+        ball = new Point((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2) - 100);
+        deltaBall = new Point(-6, 6);
+    }
 
     public void update(Graphics g)
     {
@@ -38,7 +48,6 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         doubleBufferGraphics.setColor(this.getForeground());
         paint(doubleBufferGraphics);
 
-
         //flip
         g.drawImage(doubleBuffer, 0, 0, this);
     }
@@ -49,9 +58,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         if (runThread == null) //if runThread = null, then there is no active thread, so init + start game loop
         {
             this.addKeyListener(this);
-            leftBoxY = (this.getSize().height / 2) - (BOX_HEIGHT / 2);
-            rightBoxY = leftBoxY;
-            ball = new Point((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2) - 100);
+            resetGame();
             runThread = new Thread(this);
             runThread.start();
         }
@@ -76,8 +83,6 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     {
         while(true)
         {
-            if (DEBUG)
-                System.out.println("Loop");
             for (int k : keysPressed) //move paddles if keys are pressed
             {
                 if (DEBUG)
@@ -104,22 +109,49 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             }
 
             //move ball
-            ball.x += ballXOffset;
-            ball.y += ballYOffset;
-            //check collisions
+            if (moveBall)
+            {
+                ball.x += deltaBall.x;
+                ball.y += deltaBall.y;
+            }
 
-            if (ball.x <= ELEMENT_WIDTH && ball.y >= leftBoxY && ball.y <= leftBoxY + BOX_HEIGHT) //check collision w/ left box
+            //check collisions
+            Dimension d = this.getSize();
+            if (ball.x <= 0) //player 1 loses
+            {
+                if (DEBUG)
+                    System.out.println("Ball Collide With Left Wall");
+                p2score++;
+                resetGame();
+            }
+            else if (ball.x >= d.width) //player 2 loses
+            {
+                if (DEBUG)
+                    System.out.println("Ball Collide With Right Wall");
+                p1Score++;
+                resetGame();
+            }
+            else if (ball.x <= ELEMENT_WIDTH && ball.y >= leftBoxY && ball.y <= leftBoxY + BOX_HEIGHT) //check collision w/ left box
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Left Box");
-                ballXOffset = -ballXOffset;
+                deltaBall.x = -deltaBall.x;
             }
+            else if (ball.y <= 0 || ball.y + ELEMENT_WIDTH >= d.height) //check colisions with top and bottom
+            {
+                if (DEBUG)
+                    System.out.println("Ball Collide With Top Or Bottom");
+                deltaBall.y = -deltaBall.y;
+            }
+
+
+
 
             repaint();
             try
             {
                 Thread.currentThread();
-                Thread.sleep(50);
+                Thread.sleep(FRAME_DELAY);
             }
             catch(Exception e)
             {
