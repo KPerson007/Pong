@@ -19,6 +19,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private Thread runThread;
     private int leftBoxY = 0;
     private int rightBoxY = 0;
+    private int deltaVariation = 1;
     private Point ball;
     private Point deltaBall;
     private Set<Integer> keysPressed = new HashSet<Integer>();
@@ -37,11 +38,22 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     }
 
     /**
+     * to avoid a bug, speed must be varied, tack this on to any movement of the ball to vary it and avoid the bug
+     * @return the variation in speed
+     */
+    public int getDeltaVariation()
+    {
+        int newVariation = deltaVariation;
+        deltaVariation = -deltaVariation;
+        return newVariation;
+    }
+
+    /**
      * determine the Y position of the ball relative to the paddle it collided with
      * @param boxY send in leftBoxY or rightBoxY depending on the collision
      * @return a new delta Y for the ball
      */
-    public int getNewDeltaY (int boxY)
+    public int getNewDeltaY(int boxY)
     {
         if (ball.y < boxY + (BOX_HEIGHT / 2)) //is in top half
         {
@@ -141,8 +153,8 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             //move ball
             if (moveBall)
             {
-                ball.x += deltaBall.x;
-                ball.y += deltaBall.y;
+                ball.x += deltaBall.x + getDeltaVariation();
+                ball.y += deltaBall.y + getDeltaVariation();
             }
             //check collisions
             Dimension d = this.getSize();
