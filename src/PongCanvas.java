@@ -114,7 +114,6 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 ball.x += deltaBall.x;
                 ball.y += deltaBall.y;
             }
-
             //check collisions
             Dimension d = this.getSize();
             if (ball.x <= 0) //player 1 loses
@@ -131,10 +130,16 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 p1Score++;
                 resetGame();
             }
-            else if (ball.x <= ELEMENT_WIDTH && ball.y >= leftBoxY && ball.y <= leftBoxY + BOX_HEIGHT) //check collision w/ left box
+            else if (ball.x <= ELEMENT_WIDTH && ball.y >= leftBoxY && ball.y <= leftBoxY + BOX_HEIGHT) //check collision with left box
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Left Box");
+                deltaBall.x = -deltaBall.x;
+            }
+            else if (ball.x + ELEMENT_WIDTH >= d.width - ELEMENT_WIDTH && ball.y >= rightBoxY && ball.y <= rightBoxY + BOX_HEIGHT) //check collision with right box
+            {
+                if (DEBUG)
+                    System.out.println("Ball Collide With Right Box");
                 deltaBall.x = -deltaBall.x;
             }
             else if (ball.y <= 0 || ball.y + ELEMENT_WIDTH >= d.height) //check colisions with top and bottom
