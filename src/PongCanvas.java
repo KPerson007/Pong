@@ -208,10 +208,12 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Left Box");
-                deltaBall.x = -deltaBall.x + getDeltaVariation();
+                deltaBall.x = DEFAULT_DELTA_X + getDeltaVariation();
+                if (leftMoving)
+                    deltaBall.x += PADDLE_MOVING_ADDITIONAL_X;
                 deltaBall.y = getNewDeltaY(leftBoxY) + getDeltaVariation();
                 System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
-                //make sure the ball doesn't get stuck by disallowinga double collision, but also reallow all other collisions
+                //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                 noCollide[CollisionType.LEFT_PADDLE] = true;
                 noCollide[CollisionType.RIGHT_PADDLE] = false;
                 noCollide[CollisionType.TOP] = false;
@@ -221,10 +223,12 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Right Box");
-                deltaBall.x = -deltaBall.x + getDeltaVariation();
+                deltaBall.x = -DEFAULT_DELTA_X + getDeltaVariation();
+                if (rightMoving)
+                    deltaBall.x -= PADDLE_MOVING_ADDITIONAL_X;
                 deltaBall.y = getNewDeltaY(rightBoxY) + getDeltaVariation();
                 System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
-                //make sure the ball doesn't get stuck by disallowinga double collision, but also reallow all other collisions
+                //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                 noCollide[CollisionType.LEFT_PADDLE] = false;
                 noCollide[CollisionType.RIGHT_PADDLE] = true;
                 noCollide[CollisionType.TOP] = false;
@@ -244,12 +248,12 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 p1Score++;
                 resetGame();
             }
-            else if (ball.y <= 0 && noCollide[CollisionType.TOP] == false) //check colisions with top
+            else if (ball.y <= 0 && noCollide[CollisionType.TOP] == false) //check collisions with top
             {
                 if (DEBUG)
                     System.out.println("Ball Collide With Top Or Bottom");
                 deltaBall.y = -deltaBall.y + getDeltaVariation();
-                //make sure the ball doesn't get stuck by disallowinga double collision, but also reallow all other collisions
+                //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                 noCollide[CollisionType.LEFT_PADDLE] = false;
                 noCollide[CollisionType.RIGHT_PADDLE] = false;
                 noCollide[CollisionType.TOP] = true;
@@ -260,7 +264,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 if (DEBUG)
                     System.out.println("Ball Collide With Top Or Bottom");
                 deltaBall.y = -deltaBall.y + getDeltaVariation();
-                //make sure the ball doesn't get stuck by disallowinga double collision, but also reallow all other collisions
+                //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                 noCollide[CollisionType.LEFT_PADDLE] = false;
                 noCollide[CollisionType.RIGHT_PADDLE] = false;
                 noCollide[CollisionType.TOP] = false;
