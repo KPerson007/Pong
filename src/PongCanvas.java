@@ -15,8 +15,11 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private final int BOX_SPACE_FROM_WALL = 10;
     private final int MOVE_OFFSET = 10;
     private final int FRAME_DELAY = 50;
-    private final int ABS_DEFAULT_DELTA_Y_FULL = 6;
+    private final int ABS_DEFAULT_DELTA_Y_FULL = 10;
+    private final int PADDLE_MOVING_ADDITIONAL_X = 3;
+    private final int DEFAULT_DELTA_X = 12;
 
+    Random random = new Random();
     private Thread runThread;
     private int leftBoxY = 0;
     private int rightBoxY = 0;
@@ -38,7 +41,12 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         leftBoxY = (this.getSize().height / 2) - (BOX_HEIGHT / 2);
         rightBoxY = leftBoxY;
         ball = new Point((d.width / 2) - (ELEMENT_WIDTH / 2), (d.height / 2) - (ELEMENT_WIDTH / 2) - 100);
-        deltaBall = new Point(-12, 6);
+        //determine if the ball should start mvoing to the left or to the right
+        boolean startOnLeft = random.nextBoolean();
+        if (startOnLeft)
+            deltaBall = new Point(-DEFAULT_DELTA_X, ABS_DEFAULT_DELTA_Y_FULL);
+        else
+            deltaBall = new Point(DEFAULT_DELTA_X, ABS_DEFAULT_DELTA_Y_FULL);
         for (int i = 0; i < CollisionType.TOTAL; i++)
             noCollide[i] = false;
     }
@@ -259,7 +267,8 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                 noCollide[CollisionType.BOTTOM] = true;
             }
 
-
+            leftMoving = false;
+            rightMoving = false;
 
             repaint();
             try
