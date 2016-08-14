@@ -9,7 +9,7 @@ import java.util.*;
  * Created by Kevin on 8/9/2016.
  */
 public class PongCanvas extends Canvas implements Runnable, KeyListener {
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
 
     private final int BOX_HEIGHT = 100;
     private final int ELEMENT_WIDTH = 25;
@@ -28,6 +28,8 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private int leftBoxY = 0;
     private int rightBoxY = 0;
     private int deltaVariation = 1;
+    private int p1Score = 0;
+    private int p2Score = 0;
     private Point ball;
     private Point deltaBall;
     private Set<Integer> keysPressed = new HashSet<Integer>();
@@ -36,9 +38,10 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private boolean leftMoving = false;
     private boolean rightMoving = false;
     private boolean isInMenu = true;
+    private boolean isInEndGame = false;
+    private boolean p1Won = false;
+    private boolean doResetGame = false;
     private boolean[] noCollide = {false, false, false, false, false, false};
-    private int p1Score = 0;
-    private int p2score = 0;
 
     public void resetGame()
     {
@@ -137,12 +140,25 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             int p1TextX = d.width / 4;
             int p2TextX = (d.width / 2) + (d.width / 4);
             g.drawString("" + p1Score, p1TextX, 10); //player 1 score
-            g.drawString("" + p2score, p2TextX, 10); //player 2 score
+            g.drawString("" + p2Score, p2TextX, 10); //player 2 score
             String p1KeyPrompt = "W = Up; S = Down";
             String p2KeyPrompt = "Up Arrow = Up; Down Arrow = Down";
             g.drawString(p1KeyPrompt, p1TextX - (g.getFontMetrics().stringWidth(p1KeyPrompt) / 2), 25); //player 1 key prompt
             if (twoPlayer)
                 g.drawString(p2KeyPrompt, p2TextX - (g.getFontMetrics().stringWidth(p2KeyPrompt) / 2), 25); //player 2 key prompt, only draw if 2 player game
+            if (isInEndGame)
+            {
+                if (p1Won)
+                {
+                    String p1WonPrompt = "Player 1 Wins! Press ENTER to restart.";
+                    g.drawString(p1WonPrompt, (d.width / 4) - (g.getFontMetrics().stringWidth(p1WonPrompt) / 2), d.height / 3);
+                }
+                else
+                {
+                    String p2WonPrompt = "Player 2 Wins! Press ENTER to restart.";
+                    g.drawString(p2WonPrompt, (d.width - (d.width / 4)) - (g.getFontMetrics().stringWidth(p2WonPrompt) / 2), d.height / 3);
+                }
+            }
         }
         else
         {
@@ -174,7 +190,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                     System.out.println(k);
                 switch (k) {
                     case KeyEvent.VK_W: //move left paddle up
-                        if (!isInMenu) {
+                        if (!isInMenu && !isInEndGame) {
                             if (!(leftBoxY - MOVE_OFFSET <= 0)) {
                                 leftMoving = true;
                                 leftBoxY -= MOVE_OFFSET;
@@ -183,7 +199,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         }
                         break;
                     case KeyEvent.VK_S: //move left paddle down
-                        if (!isInMenu) {
+                        if (!isInMenu && !isInEndGame) {
                             if (!(leftBoxY + BOX_HEIGHT + MOVE_OFFSET >= d.height)) {
                                 leftMoving = true;
                                 leftBoxY += MOVE_OFFSET;
@@ -192,7 +208,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         }
                         break;
                     case KeyEvent.VK_UP: //move right paddle up
-                        if (!isInMenu) {
+                        if (!isInMenu && !isInEndGame) {
                             if (!(rightBoxY - MOVE_OFFSET <= 0) && twoPlayer) {
                                 rightMoving = true;
                                 rightBoxY -= MOVE_OFFSET;
@@ -201,7 +217,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         }
                         break;
                     case KeyEvent.VK_DOWN: //move right paddle down
-                        if (!isInMenu) {
+                        if (!isInMenu && !isInEndGame) {
                             if (!(rightBoxY + BOX_HEIGHT + MOVE_OFFSET >= d.height) && twoPlayer) {
                                 rightMoving = true;
                                 rightBoxY += MOVE_OFFSET;
@@ -212,12 +228,24 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                     case KeyEvent.VK_1: //start a one player game, TODO: implement one player games
                         break;
                     case KeyEvent.VK_2: //start a two player game
-                        isInMenu = false;
-                        delayTimer = -FRAME_DELAY;
+                        if (isInMenu)
+                        {
+                            isInMenu = false;
+                            delayTimer = -FRAME_DELAY;
+                        }
+                        break;
+                    case KeyEvent.VK_ENTER: //restart the game if in end game
+                        if (isInEndGame)
+                        {
+                            isInEndGame = false;
+                            p1Score = 0;
+                            p2Score = 0;
+                            resetGame();
+                        }
                         break;
                 }
             }
-            if (!isInMenu)
+            if (!isInMenu && !isInEndGame)
             {
                 if (delayTimer < START_DELAY_MS) //give a delay before the game starts running
                     delayTimer += FRAME_DELAY;
@@ -268,14 +296,14 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                     {
                         if (DEBUG)
                             System.out.println("Ball Collide With Left Wall");
-                        p2score++;
-                        resetGame();
+                        p2Score++;
+                        doResetGame = true;
                     } else if (ball.x + ELEMENT_WIDTH >= d.width) //player 2 loses
                     {
                         if (DEBUG)
                             System.out.println("Ball Collide With Right Wall");
                         p1Score++;
-                        resetGame();
+                        doResetGame = true;
                     } else if (ball.y <= 0 && noCollide[CollisionType.TOP] == false) //check collisions with top
                     {
                         if (DEBUG)
@@ -300,6 +328,25 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
 
                     leftMoving = false;
                     rightMoving = false;
+
+                    //check if any player has ten points
+                    if (p1Score >= 10) //player one wins
+                    {
+                        doResetGame = false;
+                        p1Won = true;
+                        isInEndGame = true;
+                    }
+                    if (p2Score >= 10) //player two wins
+                    {
+                        doResetGame = false;
+                        p1Won = false;
+                        isInEndGame = true;
+                    }
+
+                    //reset the game if needed
+                    if (doResetGame)
+                        resetGame();
+                    doResetGame = false;
                 }
             }
             repaint();
