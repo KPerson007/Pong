@@ -12,13 +12,13 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private final boolean DEBUG = false;
 
     private final int BOX_HEIGHT = 100;
-    private final int ELEMENT_WIDTH = 25;
+    private final int ELEMENT_WIDTH = 30;
     private final int BOX_SPACE_FROM_WALL = 10;
     private final int MOVE_OFFSET = 11;
     private final int FRAME_DELAY = 25;
     private final int ABS_DEFAULT_DELTA_Y_FULL = 10;
     private final int PADDLE_MOVING_ADDITIONAL_X = 4;
-    private final int DEFAULT_DELTA_X = 11;
+    private final int DEFAULT_DELTA_X = 10;
     private final int START_DELAY_MS = 500;
 
     Random random = new Random();
@@ -104,6 +104,62 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
             return 0;
     }
 
+    public void moveLeftPaddleUp()
+    {
+        if (!isInMenu && !isInEndGame)
+        {
+            if (!(leftBoxY - MOVE_OFFSET <= 0))
+            {
+                leftMoving = true;
+                leftBoxY -= MOVE_OFFSET;
+            }
+            else
+                leftBoxY = 0;
+        }
+    }
+
+    public void moveLeftPaddleDown(Dimension d)
+    {
+        if (!isInMenu && !isInEndGame)
+        {
+            if (!(leftBoxY + BOX_HEIGHT + MOVE_OFFSET >= d.height))
+            {
+                leftMoving = true;
+                leftBoxY += MOVE_OFFSET;
+            }
+            else
+                leftBoxY = d.height - BOX_HEIGHT;
+        }
+    }
+
+    public void moveRightPaddleUp(int offset)
+    {
+        if (!isInMenu && !isInEndGame)
+        {
+            if (!(rightBoxY - offset <= 0))
+            {
+                rightMoving = true;
+                rightBoxY -= offset;
+            }
+            else
+                rightBoxY = 0;
+        }
+    }
+
+    public void moveRightPaddleDown(int offset, Dimension d)
+    {
+        if (!isInMenu && !isInEndGame)
+        {
+            if (!(rightBoxY + BOX_HEIGHT + offset >= d.height))
+            {
+                rightMoving = true;
+                rightBoxY += offset;
+            }
+            else
+                rightBoxY = d.height - BOX_HEIGHT;
+        }
+    }
+
     public void update(Graphics g)
     {
         //set up double buffering
@@ -184,53 +240,39 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
         while(true)
         {
             Dimension d = this.getSize();
-            for (int k : keysPressed) //handle key presses
+            Set<Integer> keysToLoop = keysPressed;
+            for (int k : keysToLoop) //handle key presses
             {
                 if (DEBUG)
                     System.out.println(k);
                 switch (k) {
                     case KeyEvent.VK_W: //move left paddle up
-                        if (!isInMenu && !isInEndGame) {
-                            if (!(leftBoxY - MOVE_OFFSET <= 0)) {
-                                leftMoving = true;
-                                leftBoxY -= MOVE_OFFSET;
-                            } else
-                                leftBoxY = 0;
-                        }
+                        moveLeftPaddleUp();
                         break;
                     case KeyEvent.VK_S: //move left paddle down
-                        if (!isInMenu && !isInEndGame) {
-                            if (!(leftBoxY + BOX_HEIGHT + MOVE_OFFSET >= d.height)) {
-                                leftMoving = true;
-                                leftBoxY += MOVE_OFFSET;
-                            } else
-                                leftBoxY = d.height - BOX_HEIGHT;
-                        }
+                        moveLeftPaddleDown(d);
                         break;
                     case KeyEvent.VK_UP: //move right paddle up
-                        if (!isInMenu && !isInEndGame) {
-                            if (!(rightBoxY - MOVE_OFFSET <= 0) && twoPlayer) {
-                                rightMoving = true;
-                                rightBoxY -= MOVE_OFFSET;
-                            } else
-                                rightBoxY = 0;
-                        }
+                        if (twoPlayer)
+                            moveRightPaddleUp(MOVE_OFFSET);
                         break;
                     case KeyEvent.VK_DOWN: //move right paddle down
-                        if (!isInMenu && !isInEndGame) {
-                            if (!(rightBoxY + BOX_HEIGHT + MOVE_OFFSET >= d.height) && twoPlayer) {
-                                rightMoving = true;
-                                rightBoxY += MOVE_OFFSET;
-                            } else
-                                rightBoxY = d.height - BOX_HEIGHT;
-                        }
+                        if(twoPlayer)
+                            moveRightPaddleDown(MOVE_OFFSET, d);
                         break;
                     case KeyEvent.VK_1: //start a one player game, TODO: implement one player games
+                        if (isInMenu)
+                        {
+                            isInMenu = false;
+                            twoPlayer = false;
+                            delayTimer = -FRAME_DELAY;
+                        }
                         break;
                     case KeyEvent.VK_2: //start a two player game
                         if (isInMenu)
                         {
                             isInMenu = false;
+                            twoPlayer = true;
                             delayTimer = -FRAME_DELAY;
                         }
                         break;
@@ -261,6 +303,15 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         }
                         ball.x += newX;
                         ball.y += newY;
+                    }
+
+                    //have the AI move its paddle if it's a one player game
+                    if (!twoPlayer)
+                    {
+                        if (ball.y + deltaBall.y > rightBoxY + BOX_HEIGHT && deltaBall.x > 0) //if ball is below the box and the ball is moving toward the AI
+                            moveRightPaddleDown(MOVE_OFFSET - 2, d);
+                        else if (ball.y + deltaBall.y < rightBoxY && deltaBall.x > 0) //if ball is below the box and the ball is moving toward the AI
+                            moveRightPaddleUp(MOVE_OFFSET - 2);
                     }
 
                     //check collisions
