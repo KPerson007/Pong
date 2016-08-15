@@ -14,11 +14,11 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private final int BOX_HEIGHT = 100;
     private final int ELEMENT_WIDTH = 25;
     private final int BOX_SPACE_FROM_WALL = 10;
-    private final int MOVE_OFFSET = 10;
-    private final int FRAME_DELAY = 50;
+    private final int MOVE_OFFSET = 11;
+    private final int FRAME_DELAY = 25;
     private final int ABS_DEFAULT_DELTA_Y_FULL = 10;
-    private final int PADDLE_MOVING_ADDITIONAL_X = 3;
-    private final int DEFAULT_DELTA_X = 12;
+    private final int PADDLE_MOVING_ADDITIONAL_X = 4;
+    private final int DEFAULT_DELTA_X = 11;
     private final int START_DELAY_MS = 500;
 
     Random random = new Random();
@@ -272,7 +272,8 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         if (leftMoving)
                             deltaBall.x += PADDLE_MOVING_ADDITIONAL_X;
                         deltaBall.y = getNewDeltaY(leftBoxY) + getDeltaVariation();
-                        System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
+                        if (DEBUG)
+                            System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
                         //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                         noCollide[CollisionType.LEFT_PADDLE] = true;
                         noCollide[CollisionType.RIGHT_PADDLE] = false;
@@ -286,7 +287,8 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                         if (rightMoving)
                             deltaBall.x -= PADDLE_MOVING_ADDITIONAL_X;
                         deltaBall.y = getNewDeltaY(rightBoxY) + getDeltaVariation();
-                        System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
+                        if (DEBUG)
+                            System.out.println("new X: " + deltaBall.x + " new Y: " + deltaBall.y);
                         //make sure the ball doesn't get stuck by disallowing a double collision, but also reallow all other collisions
                         noCollide[CollisionType.LEFT_PADDLE] = false;
                         noCollide[CollisionType.RIGHT_PADDLE] = true;
