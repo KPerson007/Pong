@@ -16,7 +16,7 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
     private final int BOX_SPACE_FROM_WALL = 10;
     private final int MOVE_OFFSET = 11;
     private final int FRAME_DELAY = 25;
-    private final int ABS_DEFAULT_DELTA_Y_FULL = 10;
+    private final int ABS_DEFAULT_DELTA_Y_FULL = 12;
     private final int PADDLE_MOVING_ADDITIONAL_X = 4;
     private final int DEFAULT_DELTA_X = 10;
     private final int START_DELAY_MS = 500;
@@ -309,9 +309,9 @@ public class PongCanvas extends Canvas implements Runnable, KeyListener {
                     if (!twoPlayer)
                     {
                         if (ball.y + deltaBall.y > rightBoxY + BOX_HEIGHT && deltaBall.x > 0) //if ball is below the box and the ball is moving toward the AI
-                            moveRightPaddleDown(MOVE_OFFSET - 2, d);
+                            moveRightPaddleDown(MOVE_OFFSET, d);
                         else if (ball.y + deltaBall.y < rightBoxY && deltaBall.x > 0) //if ball is below the box and the ball is moving toward the AI
-                            moveRightPaddleUp(MOVE_OFFSET - 2);
+                            moveRightPaddleUp(MOVE_OFFSET );
                     }
 
                     //check collisions
