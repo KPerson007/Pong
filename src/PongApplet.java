@@ -3,6 +3,7 @@ import java.awt.*;
 
 /**
  * Created by Kevin on 8/9/2016.
+ * If you embed this jar file onto a website and set code="PongApplet" in the <applet> tag, this is the class that will run.
  */
 public class PongApplet extends Applet {
 
